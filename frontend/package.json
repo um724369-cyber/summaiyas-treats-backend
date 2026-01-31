@@ -3,9 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
+ "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "start": "vite preview --port 8080 --host",
     "lint": "eslint .",
     "preview": "vite preview"
   },
