@@ -5,23 +5,20 @@ function App() {
   const [products, setProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [cart, setCart] = useState({}); 
+  const [cart, setCart] = useState({});
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/products?search=${searchTerm}`);
-        setProducts(response.data);
-      } catch (error) { console.error(error); }
+        const [prodRes, revRes] = await Promise.all([
+          axios.get(`https://summaiyas-treats-backend.onrender.com/api/products?search=${searchTerm}`),
+          axios.get('https://summaiyas-treats-backend.onrender.com/api/reviews')
+        ]);
+        setProducts(prodRes.data);
+        setReviews(revRes.data);
+      } catch (error) { console.error("Error fetching data:", error); }
     };
-    const fetchReviews = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/reviews');
-        setReviews(response.data);
-      } catch (error) { console.error(error); }
-    };
-    fetchProducts();
-    fetchReviews();
+    fetchData();
   }, [searchTerm]);
 
   const updateQuantity = (id, change) => {
@@ -46,87 +43,82 @@ function App() {
   };
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#fdfcf0', minHeight: '100vh', width: '100vw' }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#fdfcf0', minHeight: '100vh', color: '#5d4037' }}>
       
-      {/* HERO SECTION */}
-      <div style={{ 
-        background: 'linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("/images/mithi hajli.jpeg")', 
-        backgroundSize: 'cover', backgroundPosition: 'center', height: '400px', 
+      {/* 🏰 HERO SECTION */}
+      <header style={{ 
+        position: 'relative',
+        background: 'linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("/images/mithi hajli.jpeg")', 
+        backgroundSize: 'cover', backgroundPosition: 'center', height: '450px', 
         display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', textAlign: 'center' 
       }}>
-        <h1 style={{ fontSize: '3rem', margin: '0', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Summaiya's Delightful Treats</h1>
-        <p style={{ fontSize: '1.2rem', fontStyle: 'italic', opacity: '0.9' }}>"Authentic Homemade Sweets Delivered with Love"</p>
-        <div style={{ marginTop: '20px', backgroundColor: 'rgba(255,255,255,0.2)', padding: '10px 20px', borderRadius: '50px', backdropFilter: 'blur(5px)', border: '1px solid rgba(255,255,255,0.3)' }}>
-          📍 All Items Available Any Time!
+        <div style={{ position: 'absolute', top: '20px', right: '20px', backgroundColor: '#e67e22', padding: '10px 20px', borderRadius: '30px', fontWeight: 'bold' }}>
+          🛒 {Object.values(cart).reduce((a, b) => a + b, 0)} Items
         </div>
-      </div>
+        <h1 style={{ fontSize: '3.5rem', margin: '0' }}>Summaiya's Delightful Treats</h1>
+        <p style={{ fontSize: '1.4rem', fontStyle: 'italic' }}>"Authentic Homemade Surti Sweets"</p>
+      </header>
 
-      <div style={{ maxWidth: '1200px', margin: '-50px auto 0', padding: '0 20px' }}>
-        {/* SEARCH BAR */}
-        <div style={{ backgroundColor: 'white', padding: '15px', borderRadius: '50px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'center' }}>
+      <main style={{ maxWidth: '1200px', margin: '-60px auto 0', padding: '0 20px' }}>
+        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '50px', boxShadow: '0 15px 35px rgba(0,0,0,0.1)' }}>
           <input 
             type="text" placeholder="Search for Khajli, Samose, Magaj..." 
             value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: '80%', border: 'none', outline: 'none', fontSize: '1rem' }}
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '1.1rem' }}
           />
         </div>
 
-        {/* PRODUCT GRID */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', marginTop: '50px' }}>
-          {products.map(product => (
-            <div key={product.id} style={{ backgroundColor: 'white', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 5px 15px rgba(0,0,0,0.05)', transition: 'transform 0.3s' }}>
-              <img src={product.Img} alt={product.name} style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
-              <div style={{ padding: '20px' }}>
-                <h3 style={{ margin: '0', color: '#5d4037' }}>{product.name}</h3>
-                <p style={{ color: '#e67e22', fontWeight: 'bold', fontSize: '1.2rem', margin: '10px 0' }}>{product.price}</p>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', backgroundColor: '#fdfcf0', padding: '10px', borderRadius: '12px' }}>
-                  <button onClick={() => updateQuantity(product.id, -1)} style={{ background: 'white', border: '1px solid #ddd', borderRadius: '8px', width: '35px', height: '35px', cursor: 'pointer' }}>-</button>
-                  <span style={{ fontWeight: 'bold' }}>{cart[product.id] || 0} KG</span>
-                  <button onClick={() => updateQuantity(product.id, 1)} style={{ background: '#5d4037', color: 'white', border: 'none', borderRadius: '8px', width: '35px', height: '35px', cursor: 'pointer' }}>+</button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* REVIEWS SECTION */}
-        <section style={{ margin: '80px 0' }}>
-          <h2 style={{ textAlign: 'center', color: '#5d4037', marginBottom: '40px' }}>Real Stories from Customers</h2>
-          <div style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
-            {reviews.map(rev => (
-              <div key={rev.id} style={{ minWidth: '300px', backgroundColor: 'white', padding: '30px', borderRadius: '20px', boxShadow: '0 5px 15px rgba(0,0,0,0.03)', border: '1px solid #f0f0f0' }}>
-                <p style={{ fontStyle: 'italic', color: '#6d4c41' }}>"{rev.comment}"</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
-                  <span style={{ fontWeight: 'bold', color: '#5d4037' }}>{rev.user}</span>
-                  <span style={{ color: '#f1c40f' }}>{"★".repeat(rev.rating)}</span>
+        <section style={{ marginTop: '60px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '25px' }}>
+            {products.map(product => (
+              <div key={product.id} style={{ backgroundColor: 'white', borderRadius: '25px', overflow: 'hidden', boxShadow: '0 10px 20px rgba(0,0,0,0.05)' }}>
+                <img src={product.Img} alt={product.name} style={{ width: '100%', height: '240px', objectFit: 'cover' }} />
+                <div style={{ padding: '25px' }}>
+                  <h3>{product.name}</h3>
+                  <p style={{ color: '#e67e22', fontWeight: 'bold' }}>{product.price}</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fdfcf0', padding: '10px', borderRadius: '15px' }}>
+                    <button onClick={() => updateQuantity(product.id, -1)} style={{ borderRadius: '10px', width: '40px', height: '40px' }}>-</button>
+                    <span>{cart[product.id] || 0} KG</span>
+                    <button onClick={() => updateQuantity(product.id, 1)} style={{ background: '#5d4037', color: 'white', borderRadius: '10px', width: '40px', height: '40px' }}>+</button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </section>
-      </div>
 
-      {/* STICKY FIGMA-STYLE CHECKOUT BAR */}
-      {calculateTotal() > 0 && (
-        <div style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '500px', backgroundColor: '#5d4037', padding: '15px 30px', borderRadius: '50px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', color: 'white' }}>
-          <div>
-            <p style={{ margin: '0', fontSize: '0.8rem', opacity: '0.8' }}>Ready to order?</p>
-            <p style={{ margin: '0', fontSize: '1.2rem', fontWeight: 'bold' }}>Total: ₹{calculateTotal()}</p>
+        {/* 📍 MAP SECTION - FIXED EMBED URL */}
+        <section style={{ margin: '100px 0', padding: '40px', backgroundColor: 'white', borderRadius: '30px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', alignItems: 'center' }}>
+            <div style={{ flex: '1', minWidth: '300px' }}>
+              <h2>Visit Us</h2>
+              <p>📍 Near Al Faiz Restaurant, Nagoriwad, Surat</p>
+              <p>📞 840-193-0835</p>
+            </div>
+            <div style={{ flex: '1.5', minWidth: '300px', height: '350px', borderRadius: '20px', overflow: 'hidden' }}>
+              <iframe 
+                title="Shop Location" 
+                src=" https://maps.app.goo.gl/N7z5yid8L5RzMgjj7" 
+                 width="100%" 
+                height="100%" 
+                style={{ border: 0 }} 
+                allowFullScreen="" 
+                loading="lazy">
+              </iframe>
+            </div>
           </div>
-          <button onClick={handleSendOrder} style={{ backgroundColor: '#25D366', color: 'white', border: 'none', padding: '12px 25px', borderRadius: '50px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem' }}>
-            🛒 Send to WhatsApp
-          </button>
+        </section>
+      </main>
+
+      {calculateTotal() > 0 && (
+        <div style={{ position: 'fixed', bottom: '40px', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '600px', backgroundColor: '#5d4037', padding: '20px 40px', borderRadius: '60px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.4)', color: 'white', zIndex: 1000 }}>
+          <p style={{ margin: '0', fontWeight: 'bold' }}>Total: ₹{calculateTotal()}</p>
+          <button onClick={handleSendOrder} style={{ backgroundColor: '#25D366', color: 'white', border: 'none', padding: '15px 30px', borderRadius: '50px', fontWeight: 'bold', cursor: 'pointer' }}>Order on WhatsApp</button>
         </div>
       )}
-
-      <footer style={{ textAlign: 'center', padding: '60px 20px', backgroundColor: '#5d4037', color: 'white' }}>
-        <p style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Summaiya's Delightful Treats</p>
-        <p>📞 840-193-0835 | 📍 Surat, Gujarat</p>
-        <p style={{ marginTop: '20px', opacity: '0.6', fontSize: '0.8rem' }}>© 2026 Crafted with ❤️ for Mom</p>
-      </footer>
     </div>
   );
 }
 
+// 🌟 CRITICAL FIX: EXPORT DEFAULT APP
 export default App;
